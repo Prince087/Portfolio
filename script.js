@@ -3,13 +3,35 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initCustomCursor();
     initScrollReveal();
     initTiltEffect();
     initNavbar();
 });
 
-/* ===== 1. CUSTOM CURSOR ===== */
+/* ===== 0. THEME TOGGLE ===== */
+function initTheme() {
+    const themeToggle = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
+    
+    // Get saved theme or default to dark
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    htmlElement.setAttribute('data-theme', savedTheme);
+    
+    // Toggle theme on button click
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = htmlElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            htmlElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    }
+}
+
+/* ===== 2. CUSTOM CURSOR ===== */
 function initCustomCursor() {
     const cursor = document.getElementById('cursor');
     const cursorBlur = document.getElementById('cursor-blur');
@@ -45,7 +67,7 @@ function initCustomCursor() {
     });
 }
 
-/* ===== 2. SCROLL REVEAL ===== */
+/* ===== 3. SCROLL REVEAL ===== */
 function initScrollReveal() {
     const reveals = document.querySelectorAll('.reveal');
     const windowHeight = window.innerHeight;
@@ -64,7 +86,7 @@ function initScrollReveal() {
     checkReveal(); // Trigger once on load
 }
 
-/* ===== 3. 3D TILT EFFECT ===== */
+/* ===== 4. 3D TILT EFFECT ===== */
 function initTiltEffect() {
     const cards = document.querySelectorAll('[data-tilt]');
 
@@ -102,7 +124,7 @@ function initTiltEffect() {
     });
 }
 
-/* ===== 4. NAVBAR BLUR ON SCROLL ===== */
+/* ===== 5. NAVBAR BLUR ON SCROLL ===== */
 function initNavbar() {
     const navbar = document.getElementById('navbar');
     window.addEventListener('scroll', () => {
