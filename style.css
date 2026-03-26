@@ -3,18 +3,18 @@
    ============================================= */
 
 :root {
-  --bg: #030305;
-  --bg-panel: rgba(15, 15, 20, 0.4);
-  --border: rgba(255, 255, 255, 0.08);
+  --bg: #000000;
+  --bg-panel: rgba(20, 20, 20, 0.85);
+  --border: rgba(255, 255, 255, 0.2);
   --text: #ffffff;
-  --text-muted: #8892b0;
+  --text-muted: #cccccc;
   
-  --neon-cyan: #00f0ff;
-  --neon-purple: #bd00ff;
-  --neon-cyan-glow: rgba(0, 240, 255, 0.5);
-  --neon-cyan-shadow: rgba(0, 240, 255, 0.3);
+  --neon-cyan: #ccff00; /* Neon yellow for max contrast */
+  --neon-purple: #ff0055; /* Hot pink */
+  --neon-cyan-glow: rgba(204, 255, 0, 0.5);
+  --neon-cyan-shadow: rgba(204, 255, 0, 0.3);
   
-  --text-stroke: rgba(255, 255, 255, 0.2);
+  --text-stroke: rgba(255, 255, 255, 0.4);
   
   --font-display: 'Outfit', sans-serif;
   --font-body: 'Inter', sans-serif;
@@ -264,7 +264,7 @@ button { font-family: inherit; border: none; background: none; cursor: none; }
 .hero-name {
   font-family: var(--font-display); font-size: clamp(3rem, 10vw, 8rem);
   font-weight: 900; line-height: 1; letter-spacing: -2px;
-  color: #fff; text-transform: uppercase; margin-bottom: 1rem;
+  color: var(--text); text-transform: uppercase; margin-bottom: 1rem;
 }
 .glitch-text {
   font-family: "Courier New", monospace;
@@ -295,7 +295,7 @@ button { font-family: inherit; border: none; background: none; cursor: none; }
   transition: transform var(--transition), border-color var(--transition);
 }
 .bento-box:hover { border-color: rgba(255,255,255,0.2); }
-.bento-box h3 { font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700; color: #fff; }
+.bento-box h3 { font-family: var(--font-display); font-size: 1.5rem; margin-bottom: 1rem; font-weight: 700; color: var(--text); }
 .bento-avatar { padding: 0; grid-row: span 2; display: flex; flex-direction: column; justify-content: flex-end; min-height: 400px; }
 .bento-avatar img { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: 0.8; transition: all 0.5s; }
 .bento-avatar:hover img { opacity: 1; transform: scale(1.05); }
@@ -313,7 +313,7 @@ button { font-family: inherit; border: none; background: none; cursor: none; }
   transition: all var(--transition);
 }
 .social-glass svg { width: 24px; height: 24px; color: var(--text-muted); transition: color var(--transition); }
-.social-glass:hover { background: rgba(255,255,255,0.05); border-color: var(--neon-cyan); color: #fff; }
+.social-glass:hover { background: rgba(255,255,255,0.05); border-color: var(--neon-cyan); color: var(--text); }
 .social-glass:hover svg { color: var(--neon-cyan); }
 
 /* ===== SECTION: SKILLS (MARQUEE) ===== */
@@ -327,9 +327,9 @@ button { font-family: inherit; border: none; background: none; cursor: none; }
 .skill-pill {
   font-family: var(--font-display);
   font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; text-transform: uppercase;
-  color: #fff; -webkit-text-stroke: 1px transparent;
+  color: var(--text); -webkit-text-stroke: 1px transparent;
 }
-.skill-pill.outline { color: transparent; -webkit-text-stroke: 1px rgba(255,255,255,0.3); }
+.skill-pill.outline { color: transparent; -webkit-text-stroke: 2px var(--neon-cyan); }
 @keyframes scroll-marquee {
   0%   { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -357,7 +357,7 @@ button { font-family: inherit; border: none; background: none; cursor: none; }
   color: rgba(255,255,255,0.05); position: absolute; top: -10px; right: 20px;
   line-height: 1; pointer-events: none;
 }
-.tilt-card h3 { font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 1rem; color: #fff; position: relative; }
+.tilt-card h3 { font-family: var(--font-display); font-size: 1.8rem; margin-bottom: 1rem; color: var(--text); position: relative; }
 .tilt-card p { color: var(--text-muted); margin-bottom: 2rem; flex: 1; position: relative; }
 .tech-stack { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; position: relative; }
 .tech-stack span {
@@ -389,11 +389,11 @@ button { font-family: inherit; border: none; background: none; cursor: none; }
 }
 .timeline-content { padding: 2rem; }
 .timeline-content .date { font-family: "Courier New", monospace; color: var(--neon-cyan); font-size: 0.85rem; margin-bottom: 0.5rem; display: block; }
-.timeline-content h4 { font-family: var(--font-display); font-size: 1.4rem; color: #fff; margin-bottom: 0.5rem; }
+.timeline-content h4 { font-family: var(--font-display); font-size: 1.4rem; color: var(--text); margin-bottom: 0.5rem; }
 .timeline-content p { color: var(--text-muted); margin-bottom: 1.5rem; }
 .cert-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .cert-tags .cert { font-size: 0.75rem; padding: 0.3rem 0.6rem; background: rgba(255,255,255,0.05); border-radius: 4px; border: 1px solid var(--border); }
-.cert-tags .cert.highlight { border-color: var(--neon-purple); color: #fff; box-shadow: inset 0 0 5px rgba(189, 0, 255, 0.3); }
+.cert-tags .cert.highlight { border-color: var(--neon-purple); color: var(--text); box-shadow: inset 0 0 5px rgba(189, 0, 255, 0.3); }
 
 /* ===== SECTION: CONTACT (TERMINAL) ===== */
 #contact { padding: 8rem 0; }
