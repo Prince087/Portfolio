@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initScrollReveal();
     initTiltEffect();
     initNavbar();
+    initSkillsWindow();
 });
 
 /* ===== 0. THEME TOGGLE ===== */
@@ -55,15 +56,31 @@ function initCustomCursor() {
         cursorBlur.style.top = `${mouseY}px`;
     });
 
-    // Hover state
-    const interactables = document.querySelectorAll('a, button, .tilt-card, .social-glass');
-    interactables.forEach(el => {
-        el.addEventListener('mouseenter', () => {
+    // Hover state — delegated instead of one listener per element.
+    // Per-element mouseenter/mouseleave breaks when interactables are
+    // nested (e.g. a .project-link button inside a .tilt-card): leaving
+    // the inner button fires ITS mouseleave and turns "hovering" off,
+    // but nothing turns it back on until the outer card is re-entered
+    // from scratch — so a second hover directly on the button does
+    // nothing and the click doesn't register. Using bubbling
+    // mouseover/mouseout with relatedTarget checks avoids that stuck
+    // state regardless of nesting.
+    const interactableSelector = 'a, button, .tilt-card, .social-glass';
+
+    document.addEventListener('mouseover', (e) => {
+        if (e.target.closest(interactableSelector)) {
             document.body.classList.add('hovering');
-        });
-        el.addEventListener('mouseleave', () => {
+        }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+        if (!e.target.closest(interactableSelector)) return;
+        const movingInto = e.relatedTarget && e.relatedTarget.closest
+            ? e.relatedTarget.closest(interactableSelector)
+            : null;
+        if (!movingInto) {
             document.body.classList.remove('hovering');
-        });
+        }
     });
 }
 
@@ -92,6 +109,12 @@ function initTiltEffect() {
 
     cards.forEach(card => {
         card.addEventListener('mousemove', e => {
+            // Freeze the tilt while hovering a project link/button so it
+            // doesn't keep rotating out from under the cursor mid-click.
+            if (e.target.closest('.project-link')) {
+                return;
+            }
+
             const rect = card.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -148,4 +171,194 @@ function initNavbar() {
             }
         });
     });
+}
+
+/* ===== 6. FLOATING SKILLS WINDOW CONTROLS & DRAG ===== */
+function initSkillsWindow() {
+    const skillsWindow = document.getElementById('skills-window');
+    const windowHeader = document.getElementById('skills-window-header');
+    const tabBtns = document.querySelectorAll('.skills-tabs .tab-btn');
+    const tabContents = document.querySelectorAll('.skills-tab-content');
+    
+    const closeBtn = document.getElementById('window-close-btn');
+    const minimizeBtn = document.getElementById('window-minimize-btn');
+    const expandBtn = document.getElementById('window-expand-btn');
+    const restoreBtn = document.getElementById('skills-restore-btn');
+
+    if (!skillsWindow) return;
+
+    // --- Tab Switching Logic ---
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.getAttribute('data-tab');
+            
+            // Toggle buttons
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            // Toggle contents
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.getAttribute('id') === targetTab) {
+                    content.classList.add('active');
+                    
+                    // Reset progress bar animation on activation
+                    const progressBars = content.querySelectorAll('.progress');
+                    progressBars.forEach(bar => {
+                        const originalWidth = bar.style.width;
+                        bar.style.width = '0';
+                        setTimeout(() => {
+                            bar.style.width = originalWidth;
+                        }, 50);
+                    });
+                }
+            });
+        });
+    });
+
+    // Initialize first tab progress bars on load
+    const activeProgressBars = document.querySelectorAll('.skills-tab-content.active .progress');
+    activeProgressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 300);
+    });
+
+    // --- Minimize / Close / Restore Logic ---
+    function hideWindow() {
+        skillsWindow.style.opacity = '0';
+        skillsWindow.style.transform = 'translate3d(0, 50px, 0) scale(0.9)';
+        skillsWindow.style.pointerEvents = 'none';
+        setTimeout(() => {
+            skillsWindow.style.display = 'none';
+            if (restoreBtn) restoreBtn.style.display = 'flex';
+        }, 300);
+    }
+
+    function showWindow() {
+        if (restoreBtn) restoreBtn.style.display = 'none';
+        skillsWindow.style.display = 'block';
+        setTimeout(() => {
+            skillsWindow.style.opacity = '1';
+            skillsWindow.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0) scale(1)`;
+            skillsWindow.style.pointerEvents = 'auto';
+            
+            // Trigger progress animations
+            const activeBars = skillsWindow.querySelectorAll('.skills-tab-content.active .progress');
+            activeBars.forEach(bar => {
+                const w = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = w;
+                }, 50);
+            });
+        }, 50);
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', hideWindow);
+    if (minimizeBtn) minimizeBtn.addEventListener('click', hideWindow);
+    if (restoreBtn) restoreBtn.addEventListener('click', showWindow);
+
+    // --- Drag and Drop Logic ---
+    let isDragging = false;
+    let startX, startY;
+    let xOffset = 0, yOffset = 0;
+
+    // Reset position logic (Green expand button)
+    if (expandBtn) {
+        expandBtn.addEventListener('click', () => {
+            xOffset = 0;
+            yOffset = 0;
+            skillsWindow.style.transform = 'translate3d(0, 0, 0)';
+            skillsWindow.style.transition = 'transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            setTimeout(() => {
+                skillsWindow.style.transition = 'transform 0.1s ease-out, border-color var(--transition), box-shadow var(--transition)';
+            }, 500);
+        });
+    }
+
+    windowHeader.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    windowHeader.addEventListener('touchstart', dragStart, { passive: false });
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('touchend', dragEnd);
+
+    function dragStart(e) {
+        // Prevent default actions only if we click the header handle
+        if (e.target === windowHeader || windowHeader.contains(e.target)) {
+            // Ignore if clicking window button
+            if (e.target.classList.contains('w-btn')) return;
+            
+            isDragging = true;
+            skillsWindow.classList.add('dragging');
+            skillsWindow.style.animation = 'none'; // stop floating drift
+            skillsWindow.style.transition = 'none';
+
+            if (e.type === 'touchstart') {
+                startX = e.touches[0].clientX - xOffset;
+                startY = e.touches[0].clientY - yOffset;
+            } else {
+                startX = e.clientX - xOffset;
+                startY = e.clientY - yOffset;
+            }
+            e.preventDefault();
+        }
+    }
+
+    function drag(e) {
+        if (!isDragging) return;
+        
+        let clientX, clientY;
+        if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        } else {
+            clientX = e.clientX;
+            clientY = e.clientY;
+        }
+
+        // Screen boundary checking
+        const padding = 20;
+        const windowWidth = skillsWindow.offsetWidth;
+        const windowHeight = skillsWindow.offsetHeight;
+        const screenWidth = window.innerWidth;
+        const screenHeight = window.innerHeight;
+
+        let targetX = clientX - startX;
+        let targetY = clientY - startY;
+
+        xOffset = targetX;
+        yOffset = targetY;
+
+        skillsWindow.style.transform = `translate3d(${xOffset}px, ${yOffset}px, 0)`;
+        e.preventDefault();
+    }
+
+    function dragEnd() {
+        if (!isDragging) return;
+        isDragging = false;
+        skillsWindow.classList.remove('dragging');
+        skillsWindow.style.transition = 'transform 0.1s ease-out, border-color var(--transition), box-shadow var(--transition)';
+        // Resume drift animation after drag
+        setTimeout(() => {
+            if (!isDragging) {
+                skillsWindow.style.animation = 'window-drift 8s infinite alternate ease-in-out';
+            }
+        }, 1000);
+    }
+
+    // Hook to custom cursor hover list
+    const cursor = document.getElementById('cursor');
+    if (cursor) {
+        const elements = [windowHeader, restoreBtn, closeBtn, minimizeBtn, expandBtn, ...tabBtns];
+        elements.forEach(el => {
+            if (!el) return;
+            el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+        });
+    }
 }
